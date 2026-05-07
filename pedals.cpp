@@ -10,14 +10,17 @@ constexpr int PIN_CLUTCH = A2;
 constexpr bool kInvertPedals = false;
 // true: fren ilk harekette yavas, sonlara dogru daha agresif artar.
 constexpr bool realisticBrake = true;
-// A0 pedal kalibrasyonu: 604 -> 0, 270 -> 1023
-constexpr int A0_RAW_MIN = 270;
-constexpr int A0_RAW_MAX = 604;
-// Fren (A1) kalibrasyonu: 614 -> 0, 244 -> 1023
-constexpr int BRAKE_RAW_MIN = 244;
-constexpr int BRAKE_RAW_MAX = 603;
-constexpr int BRAKE_SPLIT_RAW = 450;
+// Gaz (A0) ham okuma araligi: 960 -> 0, 596 -> 1023
+constexpr int GAS_RAW_MIN = 596;
+constexpr int GAS_RAW_MAX = 960;
+// Fren (A1) ham okuma araligi: 710 -> 0, 305 -> 1023
+constexpr int BRAKE_RAW_MIN = 305;
+constexpr int BRAKE_RAW_MAX = 710;
+constexpr int BRAKE_SPLIT_RAW = 537;
 constexpr int BRAKE_SPLIT_OUTPUT = 120;
+// Debriyaj (A2) ham okuma araligi: 595 -> 0, 265 -> 1023
+constexpr int CLUTCH_RAW_MIN = 265;
+constexpr int CLUTCH_RAW_MAX = 595;
 
 static int toPedalAxis(int raw) {
   int v = kInvertPedals ? (1023 - raw) : raw;
@@ -25,6 +28,7 @@ static int toPedalAxis(int raw) {
 }
 
 static int mapBrakeAxis(int raw) {
+  raw = toPedalAxis(raw);
   if (realisticBrake) {
     long mapped;
     if (raw >= BRAKE_SPLIT_RAW) {
@@ -42,7 +46,14 @@ static int mapBrakeAxis(int raw) {
 }
 
 static int mapGasAxis(int raw) {
-  long mapped = map(raw, A0_RAW_MAX, A0_RAW_MIN, 0, 1023);
+  raw = toPedalAxis(raw);
+  long mapped = map(raw, GAS_RAW_MAX, GAS_RAW_MIN, 0, 1023);
+  return constrain(static_cast<int>(mapped), 0, 1023);
+}
+
+static int mapClutchAxis(int raw) {
+  raw = toPedalAxis(raw);
+  long mapped = map(raw, CLUTCH_RAW_MAX, CLUTCH_RAW_MIN, 0, 1023);
   return constrain(static_cast<int>(mapped), 0, 1023);
 }
 
@@ -57,5 +68,5 @@ void Pedals::init() {
 void Pedals::read(Values &out) {
   out.gas = mapGasAxis(analogRead(PIN_GAS));
   out.brake = mapBrakeAxis(analogRead(PIN_BRAKE));
-  out.clutch = toPedalAxis(analogRead(PIN_CLUTCH));
+  out.clutch = mapClutchAxis(analogRead(PIN_CLUTCH));
 }

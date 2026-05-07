@@ -23,16 +23,16 @@ void setup() {
   Serial.begin(115200);
 
   Joystick.begin();
-  Joystick.setXAxisRange(0, 4095);
+  Joystick.setXAxisRange(0, 1023);
   Joystick.setThrottleRange(0, 1023);
   Joystick.setAcceleratorRange(0, 1023);
   Joystick.setBrakeRange(0, 1023);
 }
 
 void loop() {
-  uint16_t steering;
-  if (AS5600::readRawAngle(steering)) {
-    Joystick.setXAxis(static_cast<int>(steering));
+  int steering;
+  if (AS5600::readSteeringAxis(steering)) {
+    Joystick.setXAxis(steering);
   }
 
   Pedals::Values p;
